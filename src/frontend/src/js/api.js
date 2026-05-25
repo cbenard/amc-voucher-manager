@@ -30,12 +30,17 @@ function authHeaders() {
 }
 
 async function mutateRequest(url, options) {
+  if (!csrfToken) {
+    await fetchCsrfToken();
+  }
   options.headers = authHeaders();
   let res = await fetch(url, options);
-  if (res.status === 400 && csrfToken) {
+  if (res.status === 400) {
     await fetchCsrfToken();
-    options.headers = authHeaders();
-    res = await fetch(url, options);
+    if (csrfToken) {
+      options.headers = authHeaders();
+      res = await fetch(url, options);
+    }
   }
   return res;
 }
