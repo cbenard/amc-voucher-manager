@@ -35,7 +35,7 @@ export async function getAllVouchers(type, includeArchived) {
   let vouchers = await store.getAll();
 
   if (type) {
-    vouchers = vouchers.filter((v) => v.type.toLowerCase() === type.toLowerCase());
+    vouchers = vouchers.filter((v) => typeof v.type === 'string' && v.type.toLowerCase() === type.toLowerCase());
   }
   if (!includeArchived) {
     vouchers = vouchers.filter((v) => !v.isArchived);
