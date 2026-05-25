@@ -2,8 +2,10 @@ using AmcVoucherManager.Application.DTOs;
 using AmcVoucherManager.Domain.Enums;
 using AmcVoucherManager.Domain.Interfaces;
 using AmcVoucherManager.WebApi.Controllers;
+using AmcVoucherManager.WebApi.Hubs;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Moq;
 
 namespace AmcVoucherManager.Tests.WebApi;
@@ -16,7 +18,17 @@ public class VouchersControllerTests
     public VouchersControllerTests()
     {
         _serviceMock = new Mock<IVoucherService>();
-        _sut = new VouchersController(_serviceMock.Object);
+
+        var hubContextMock = new Mock<IHubContext<VoucherHub>>();
+        var clientsMock = new Mock<IHubClients>();
+        var clientProxyMock = new Mock<IClientProxy>();
+        clientProxyMock
+            .Setup(p => p.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        clientsMock.Setup(c => c.All).Returns(clientProxyMock.Object);
+        hubContextMock.Setup(h => h.Clients).Returns(clientsMock.Object);
+
+        _sut = new VouchersController(_serviceMock.Object, hubContextMock.Object);
     }
 
     private static VoucherDto SampleVoucher(Guid? id = null) => new(

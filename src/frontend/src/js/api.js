@@ -1,12 +1,33 @@
 import * as signalR from '@microsoft/signalr';
 
 const BASE = '/api/vouchers';
+let csrfToken = null;
 
 let hubConnection = null;
 let onVoucherCreated = null;
 let onVoucherUpdated = null;
 let onVoucherArchived = null;
 let onVoucherDeleted = null;
+
+export async function fetchCsrfToken() {
+  try {
+    const res = await fetch('/api/antiforgery/token');
+    if (res.ok) {
+      const data = await res.json();
+      csrfToken = data.token;
+    }
+  } catch {
+    console.warn('Failed to fetch CSRF token');
+  }
+}
+
+function authHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  if (csrfToken) {
+    headers['X-CSRF-TOKEN'] = csrfToken;
+  }
+  return headers;
+}
 
 export async function connectHub(callbacks) {
   onVoucherCreated = callbacks.onVoucherCreated;
@@ -56,39 +77,38 @@ export async function fetchVoucher(id) {
 export async function createVoucher(data) {
   const res = await fetch(BASE, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error('Failed to create voucher');
-  const voucher = await res.json();
-  await hubConnection?.invoke('NotifyCreated', voucher).catch(() => {});
-  return voucher;
+  return res.json();
 }
 
 export async function updateVoucher(id, data) {
   const res = await fetch(`${BASE}/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error('Failed to update voucher');
-  const voucher = await res.json();
-  await hubConnection?.invoke('NotifyUpdated', voucher).catch(() => {});
-  return voucher;
+  return res.json();
 }
 
 export async function toggleArchive(id) {
-  const res = await fetch(`${BASE}/${id}/archive`, { method: 'PATCH' });
+  const res = await fetch(`${BASE}/${id}/archive`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+  });
   if (!res.ok) throw new Error('Failed to toggle archive');
-  const voucher = await res.json();
-  await hubConnection?.invoke('NotifyArchived', voucher).catch(() => {});
-  return voucher;
+  return res.json();
 }
 
 export async function deleteVoucherApi(id) {
-  const res = await fetch(`${BASE}/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${BASE}/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
   if (!res.ok) throw new Error('Failed to delete voucher');
-  await hubConnection?.invoke('NotifyDeleted', id).catch(() => {});
 }
 
 export function isOnline() {

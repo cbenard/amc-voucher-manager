@@ -55,6 +55,20 @@
 - Archive is the primary action; delete requires double confirmation
 - Notes truncated at ~80 chars with "..." in list view
 
+## Security
+
+- See `SECURITY.md` for the full threat model and risk register
+- **Never** use `FromSql`, `ExecuteSqlRaw`, or string concatenation in queries — EF Core LINQ only
+- **Never** render user input via `innerHTML` — use `textContent` or `createElement`
+- **Never** add client-invokable SignalR hub methods — broadcasts must originate server-side
+- **Always** validate input with data annotations (`[Required]`, `[StringLength]`, `[RegularExpression]`)
+- **Always** add `[IgnoreAntiforgeryToken]` to new GET endpoints
+- **Use** `Enum.TryParse` instead of `Enum.Parse` for user-supplied strings
+- **Use** `document.createElement` + `textContent` instead of `innerHTML` with interpolated strings
+- All mutating endpoints require `X-CSRF-TOKEN` header (fetched from `GET /api/antiforgery/token`)
+- Rate limited to 100 requests/min
+- CSP configured — update when adding new external resources
+
 ## Testing
 
 - xUnit tests with FluentAssertions for assertions, Moq for mocking

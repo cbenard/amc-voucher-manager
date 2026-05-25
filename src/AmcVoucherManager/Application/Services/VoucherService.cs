@@ -16,9 +16,13 @@ public class VoucherService : IVoucherService
 
     public async Task<IEnumerable<VoucherDto>> GetAllAsync(string? type = null, bool includeArchived = false)
     {
-        VoucherType? parsedType = type is not null
-            ? Enum.Parse<VoucherType>(type, ignoreCase: true)
-            : null;
+        VoucherType? parsedType = null;
+        if (type is not null)
+        {
+            if (!Enum.TryParse<VoucherType>(type, ignoreCase: true, out var parsed))
+                return [];
+            parsedType = parsed;
+        }
 
         var vouchers = await _repository.GetAllAsync(parsedType, includeArchived);
         return vouchers.Select(MapToDto);

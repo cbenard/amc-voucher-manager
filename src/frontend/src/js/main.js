@@ -52,6 +52,8 @@ function init() {
     onVoucherDeleted: (id) => db.deleteVoucher(id),
   });
 
+  api.fetchCsrfToken();
+
   if (api.isOnline()) {
     fullSync().then(() => console.log('Initial sync complete'));
   }

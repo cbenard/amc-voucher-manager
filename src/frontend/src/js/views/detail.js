@@ -146,21 +146,39 @@ function showToast(msg) {
 function showConfirm(title, message, onConfirm) {
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
-  overlay.innerHTML = `
-    <div class="modal">
-      <h3>${title}</h3>
-      <p>${message}</p>
-      <div class="modal-actions">
-        <button class="cancel">Cancel</button>
-        <button class="confirm">Confirm</button>
-      </div>
-    </div>`;
 
-  overlay.querySelector('.cancel').onclick = () => overlay.remove();
-  overlay.querySelector('.confirm').onclick = () => {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+
+  const h3 = document.createElement('h3');
+  h3.textContent = title;
+  modal.appendChild(h3);
+
+  const p = document.createElement('p');
+  p.textContent = message;
+  modal.appendChild(p);
+
+  const actions = document.createElement('div');
+  actions.className = 'modal-actions';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'cancel';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.onclick = () => overlay.remove();
+  actions.appendChild(cancelBtn);
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'confirm';
+  confirmBtn.textContent = 'Confirm';
+  confirmBtn.onclick = () => {
     overlay.remove();
     onConfirm();
   };
+  actions.appendChild(confirmBtn);
+
+  modal.appendChild(actions);
+  overlay.appendChild(modal);
+
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.remove();
   });

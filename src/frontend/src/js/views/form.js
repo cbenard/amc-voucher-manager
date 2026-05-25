@@ -177,7 +177,7 @@ function capitalize(str) {
 }
 
 function escapeAttr(str) {
-  return str.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function showToast(msg) {

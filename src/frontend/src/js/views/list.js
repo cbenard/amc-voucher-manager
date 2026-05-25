@@ -42,11 +42,11 @@ export async function renderList(params) {
 
   if (archivedOnly.length > 0) {
     html += `
-      <button class="archive-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('hidden')">
+      <button class="archive-toggle" id="archive-toggle-btn">
         <span>Archived (${archivedOnly.length})</span>
         <span class="arrow">&#9660;</span>
       </button>
-      <div class="archived-list hidden">`;
+      <div class="archived-list hidden" id="archived-list">`;
     for (const v of archivedOnly) {
       html += renderCard(v, type, true);
     }
@@ -55,6 +55,13 @@ export async function renderList(params) {
 
   html += `</div>`;
   main.innerHTML = html;
+
+  document.getElementById('archive-toggle-btn')?.addEventListener('click', () => {
+    const btn = document.getElementById('archive-toggle-btn');
+    const list = document.getElementById('archived-list');
+    btn.classList.toggle('open');
+    list.classList.toggle('hidden');
+  });
 }
 
 function renderCard(v, type, isArchived = false) {

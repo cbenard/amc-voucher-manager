@@ -16,6 +16,7 @@ A Progressive Web App for managing AMC Theater vouchers. Import vouchers by scan
 - **📝 Notes** — Optional notes on each voucher, truncated in list view
 - **🔍 FIFO / LIFO** — Active vouchers oldest-first; archived newest-first behind expander
 - **🐳 Docker** — Single-container deployment with SQLite persistence
+- **🔒 Security built in** — CSRF protection, rate limiting, security headers, input validation, paramaterized queries
 
 ---
 
@@ -59,6 +60,12 @@ docker compose logs -f
 docker compose down
 ```
 
+### Security
+
+See [`SECURITY.md`](SECURITY.md) for the full threat model, OWASP coverage, and risk register.
+
+Mutating API endpoints (`POST`, `PUT`, `PATCH`, `DELETE`) require an `X-CSRF-TOKEN` header. The client fetches the token automatically from `GET /api/antiforgery/token` on startup. Rate limiting allows 100 requests per minute per client.
+
 ### Configuration via Environment Variables
 
 All configuration is read from environment variables into ASP.NET Core's `IConfiguration`. Set them in `docker run -e` flags, `docker-compose.yml` `environment` block, or your orchestrator's config map.
@@ -84,6 +91,8 @@ docker run -d \
 ### Production behind a Reverse Proxy
 
 The app is designed to sit behind NPMPlus, Nginx Proxy Manager, Caddy, or Traefik with Authelia forward auth. No application-level authentication is included — all authorized users share the same voucher data.
+
+TLS is terminated at the reverse proxy. The app runs HTTP internally (`:5000`) with `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true`. Set HSTS headers at the reverse proxy level.
 
 ```bash
 docker run -d \
@@ -192,10 +201,10 @@ dotnet test src/AmcVoucherManager.Tests
 |---|---|---|
 | `GET` | `/api/vouchers?type=ticket&includeArchived=false` | List vouchers, optional type filter |
 | `GET` | `/api/vouchers/{id}` | Get voucher by ID |
-| `POST` | `/api/vouchers` | Create voucher |
-| `PUT` | `/api/vouchers/{id}` | Update voucher |
-| `PATCH` | `/api/vouchers/{id}/archive` | Toggle archive status |
-| `DELETE` | `/api/vouchers/{id}` | Delete voucher |
+| `POST` | `/api/vouchers` | Create voucher (requires `X-CSRF-TOKEN`) |
+| `PUT` | `/api/vouchers/{id}` | Update voucher (requires `X-CSRF-TOKEN`) |
+| `PATCH` | `/api/vouchers/{id}/archive` | Toggle archive (requires `X-CSRF-TOKEN`) |
+| `DELETE` | `/api/vouchers/{id}` | Delete voucher (requires `X-CSRF-TOKEN`) |
 
 ---
 
