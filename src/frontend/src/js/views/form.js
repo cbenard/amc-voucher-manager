@@ -31,7 +31,7 @@ export async function renderForm(params) {
       <div class="type-tabs" id="type-tabs">`;
 
   for (const t of TYPE_CONFIG) {
-    const selected = voucher?.type?.toLowerCase() === t.type || (!voucher && t.type === 'ticket');
+    const selected = voucher?.type?.toLowerCase() === t.type;
     html += `
       <button type="button" class="type-tab ${selected ? 'active' : ''}" data-type="${t.type}">
         <span class="tab-icon">${t.icon}</span>
@@ -42,7 +42,7 @@ export async function renderForm(params) {
   html += `
       </div>
 
-      <input type="hidden" name="type" id="input-type" value="${voucher?.type || 'Ticket'}" />
+      <input type="hidden" name="type" id="input-type" value="${voucher?.type || ''}" />
 
       <div class="form-group">
         <label>12-Digit Number</label>
@@ -120,6 +120,11 @@ function setupForm(editId) {
       dateAdded: document.getElementById('input-dateAdded').value || null,
     };
 
+    if (!formData.type) {
+      showToast('Please select a voucher type');
+      return;
+    }
+
     if (!formData.number12 || !formData.number16) {
       showToast('Please enter both numbers');
       return;
@@ -149,7 +154,7 @@ function setupForm(editId) {
           await db.putVoucher(created);
           await flushPendingChanges();
           showToast('Voucher added');
-          navigate(`/voucher/${created.id}`);
+          resetForm();
         } else {
           const tempId = crypto.randomUUID();
           const voucher = {
@@ -167,13 +172,23 @@ function setupForm(editId) {
           await db.putVoucher(voucher);
           await db.addPendingChange({ action: 'create', data: formData });
           showToast('Voucher added (offline, will sync)');
-          navigate(`/voucher/${tempId}`);
+          resetForm();
         }
       }
     } catch (err) {
       showToast('Error: ' + err.message);
     }
   });
+}
+
+function resetForm() {
+  document.getElementById('input-number12').value = '';
+  document.getElementById('input-number16').value = '';
+  document.getElementById('input-notes').value = '';
+  document.getElementById('notes-toggle-area').classList.remove('hidden');
+  document.getElementById('notes-input-area').classList.add('hidden');
+  document.getElementById('input-type').value = '';
+  document.querySelectorAll('.type-tab').forEach((t) => t.classList.remove('active'));
 }
 
 function capitalize(str) {
