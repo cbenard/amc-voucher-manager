@@ -59,4 +59,10 @@ public class VoucherRepository : IVoucherRepository
             await _context.SaveChangesAsync();
         }
     }
+
+    public async Task<Voucher?> GetByNumbersAsync(string number12, string number16)
+    {
+        return await _context.Vouchers
+            .FirstOrDefaultAsync(v => v.Number12 == number12 && v.Number16 == number16);
+    }
 }

@@ -34,6 +34,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.Type);
             entity.HasIndex(e => e.IsArchived);
             entity.HasIndex(e => e.DateAdded);
+            entity.HasIndex(e => new { e.Number12, e.Number16 }).IsUnique();
         });
     }
 }

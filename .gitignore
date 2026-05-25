@@ -495,7 +495,7 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # Local SQLite data directory (development only — Docker uses /data via volume)
-data/
+/data/
 
 # macOS
 .DS_Store

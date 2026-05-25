@@ -29,6 +29,7 @@ function matchPattern(pattern, hash) {
 export function navigate(hash) {
   const path = hash.startsWith('#') ? hash.slice(1) : hash;
   window.location.hash = `#${path}`;
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
 }
 
 function handleRoute() {

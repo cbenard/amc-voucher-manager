@@ -1,6 +1,7 @@
 import * as db from '../db.js';
 import * as api from '../api.js';
 import { flushPendingChanges } from '../sync.js';
+import { navigate } from '../router.js';
 import { openScanner } from '../scanner.js';
 import { TYPE_CONFIG } from './home.js';
 
@@ -141,14 +142,14 @@ function setupForm(editId) {
           await db.addPendingChange({ action: 'update', id: editId, data: formData });
         }
         showToast('Voucher updated');
-        window.location.hash = `#/voucher/${editId}`;
+        navigate(`/voucher/${editId}`);
       } else {
         if (api.isOnline()) {
           const created = await api.createVoucher(formData);
           await db.putVoucher(created);
           await flushPendingChanges();
           showToast('Voucher added');
-          window.location.hash = `#/voucher/${created.id}`;
+          navigate(`/voucher/${created.id}`);
         } else {
           const tempId = crypto.randomUUID();
           const voucher = {
@@ -166,7 +167,7 @@ function setupForm(editId) {
           await db.putVoucher(voucher);
           await db.addPendingChange({ action: 'create', data: formData });
           showToast('Voucher added (offline, will sync)');
-          window.location.hash = `#/voucher/${tempId}`;
+          navigate(`/voucher/${tempId}`);
         }
       }
     } catch (err) {

@@ -1,4 +1,5 @@
 using AmcVoucherManager.Application.DTOs;
+using AmcVoucherManager.Domain.Exceptions;
 using AmcVoucherManager.Domain.Interfaces;
 using AmcVoucherManager.WebApi.Hubs;
 using Microsoft.AspNetCore.Mvc;
@@ -42,9 +43,16 @@ public class VouchersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<VoucherDto>> Create([FromBody] CreateVoucherRequest request)
     {
-        var voucher = await _voucherService.CreateAsync(request);
-        await _hubContext.Clients.All.SendAsync("VoucherCreated", voucher);
-        return CreatedAtAction(nameof(GetById), new { id = voucher.Id }, voucher);
+        try
+        {
+            var voucher = await _voucherService.CreateAsync(request);
+            await _hubContext.Clients.All.SendAsync("VoucherCreated", voucher);
+            return CreatedAtAction(nameof(GetById), new { id = voucher.Id }, voucher);
+        }
+        catch (DuplicateVoucherException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
     }
 
     [HttpPut("{id:guid}")]

@@ -10,4 +10,5 @@ public interface IVoucherRepository
     Task<Voucher> CreateAsync(Voucher voucher);
     Task<Voucher> UpdateAsync(Voucher voucher);
     Task DeleteAsync(Guid id);
+    Task<Voucher?> GetByNumbersAsync(string number12, string number16);
 }

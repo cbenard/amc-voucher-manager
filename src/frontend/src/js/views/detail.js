@@ -1,6 +1,7 @@
 import * as db from '../db.js';
 import * as api from '../api.js';
 import { flushPendingChanges } from '../sync.js';
+import { navigate } from '../router.js';
 import { renderQR } from '../qrcode.js';
 import { renderBarcode } from '../barcode.js';
 import { TYPE_CONFIG } from './home.js';
@@ -162,7 +163,7 @@ function setupActions(id, isArchived) {
                 await db.deleteVoucher(id);
                 showToast('Voucher deleted');
                 await flushPendingChanges();
-                window.location.hash = '#/';
+                navigate('/');
                 return;
               } catch {
                 showToast('Failed to delete');
@@ -172,7 +173,7 @@ function setupActions(id, isArchived) {
             await db.deleteVoucher(id);
             await db.addPendingChange({ action: 'delete', id });
             showToast('Voucher deleted (offline, will sync)');
-            window.location.hash = '#/';
+            navigate('/');
           }
         );
       }

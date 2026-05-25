@@ -1,6 +1,7 @@
 using AmcVoucherManager.Application.DTOs;
 using AmcVoucherManager.Domain.Entities;
 using AmcVoucherManager.Domain.Enums;
+using AmcVoucherManager.Domain.Exceptions;
 using AmcVoucherManager.Domain.Interfaces;
 
 namespace AmcVoucherManager.Application.Services;
@@ -36,6 +37,10 @@ public class VoucherService : IVoucherService
 
     public async Task<VoucherDto> CreateAsync(CreateVoucherRequest request)
     {
+        var existing = await _repository.GetByNumbersAsync(request.Number12, request.Number16);
+        if (existing is not null)
+            throw new DuplicateVoucherException($"A voucher with these numbers already exists (added {existing.DateAdded:yyyy-MM-dd})");
+
         var voucher = new Voucher
         {
             Id = Guid.NewGuid(),

@@ -90,6 +90,10 @@ export async function createVoucher(data) {
     method: 'POST',
     body: JSON.stringify(data),
   });
+  if (res.status === 409) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || 'Duplicate voucher');
+  }
   if (!res.ok) throw new Error('Failed to create voucher');
   return res.json();
 }
