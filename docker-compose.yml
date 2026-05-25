@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    container_name: amc-vouchers
+    ports:
+      - "5000:5000"
+    volumes:
+      - vouchers-data:/data
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+      - DataDirectory=/data
+    restart: unless-stopped
+
+volumes:
+  vouchers-data:

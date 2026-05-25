@@ -21,9 +21,10 @@ WORKDIR /app
 RUN mkdir -p /data
 
 COPY --from=backend-build /publish .
-    COPY --from=frontend-build /AmcVoucherManager/wwwroot ./wwwroot
+COPY --from=frontend-build /AmcVoucherManager/wwwroot ./wwwroot
 
 ENV ASPNETCORE_URLS=http://+:5000
+ENV ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
 ENV DataDirectory=/data
 
 EXPOSE 5000
