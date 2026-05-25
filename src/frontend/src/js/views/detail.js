@@ -71,6 +71,36 @@ export async function renderDetail(params) {
   setupActions(id, voucher.isArchived);
 }
 
+let wakeLock = null;
+
+async function requestWakeLock() {
+  try {
+    if (wakeLock) return;
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => {
+      wakeLock = null;
+    });
+  } catch {}
+}
+
+async function releaseWakeLock() {
+  try {
+    if (wakeLock) {
+      await wakeLock.release();
+      wakeLock = null;
+    }
+  } catch {}
+}
+
+function syncWakeLock(cards) {
+  const hasUnblurred = [...cards].some((c) => c.classList.contains('unblurred'));
+  if (hasUnblurred) {
+    requestWakeLock();
+  } else {
+    releaseWakeLock();
+  }
+}
+
 function setupBlurToggles() {
   const cards = document.querySelectorAll('.barcode-card');
 
@@ -81,7 +111,16 @@ function setupBlurToggles() {
       if (!wasUnblurred) {
         card.classList.add('unblurred');
       }
+      syncWakeLock(cards);
     });
+  });
+
+  syncWakeLock(cards);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      syncWakeLock(cards);
+    }
   });
 }
 

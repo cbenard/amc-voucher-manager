@@ -1,5 +1,7 @@
 import QRCode from 'qrcode-generator';
 
+const QUIET_ZONE_MODULES = 4;
+
 export function renderQR(container, value) {
   container.innerHTML = '';
 
@@ -9,14 +11,17 @@ export function renderQR(container, value) {
     qr.make();
 
     const moduleCount = qr.getModuleCount();
+    const totalModules = moduleCount + QUIET_ZONE_MODULES * 2;
     const size = 280;
-    const cellSize = size / moduleCount;
+    const cellSize = size / totalModules;
+    const offset = QUIET_ZONE_MODULES * cellSize;
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('width', String(size));
     svg.setAttribute('height', String(size));
     svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
     svg.style.maxWidth = '280px';
+    svg.setAttribute('shape-rendering', 'crispEdges');
 
     const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     bg.setAttribute('width', '100%');
@@ -28,11 +33,11 @@ export function renderQR(container, value) {
       for (let col = 0; col < moduleCount; col++) {
         if (qr.isDark(row, col)) {
           const cell = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-          cell.setAttribute('x', String(col * cellSize));
-          cell.setAttribute('y', String(row * cellSize));
-          cell.setAttribute('width', String(cellSize));
-          cell.setAttribute('height', String(cellSize));
-          cell.setAttribute('fill', '#1a1a2e');
+          cell.setAttribute('x', String(col * cellSize + offset));
+          cell.setAttribute('y', String(row * cellSize + offset));
+          cell.setAttribute('width', String(Math.ceil(cellSize)));
+          cell.setAttribute('height', String(Math.ceil(cellSize)));
+          cell.setAttribute('fill', '#000000');
           svg.appendChild(cell);
         }
       }
