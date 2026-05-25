@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using AmcVoucherManager.Domain.Interfaces;
 using AmcVoucherManager.Infrastructure.Data;
@@ -57,6 +58,27 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddSignalR();
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Method != "GET")
+    {
+        context.Request.EnableBuffering();
+        using var reader = new StreamReader(context.Request.Body, leaveOpen: true);
+        var body = await reader.ReadToEndAsync();
+        context.Request.Body.Position = 0;
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Request {Method} {Path}: {Body}", context.Request.Method, context.Request.Path, body);
+    }
+    await next();
+    if (context.Response.StatusCode == 400)
+    {
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning("400 on {Method} {Path}", context.Request.Method, context.Request.Path);
+    }
+});
 
 app.UseExceptionHandler(exceptionHandlerApp =>
 {
