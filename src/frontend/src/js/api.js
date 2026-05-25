@@ -29,6 +29,17 @@ function authHeaders() {
   return headers;
 }
 
+async function mutateRequest(url, options) {
+  options.headers = authHeaders();
+  let res = await fetch(url, options);
+  if (res.status === 400 && csrfToken) {
+    await fetchCsrfToken();
+    options.headers = authHeaders();
+    res = await fetch(url, options);
+  }
+  return res;
+}
+
 export async function connectHub(callbacks) {
   onVoucherCreated = callbacks.onVoucherCreated;
   onVoucherUpdated = callbacks.onVoucherUpdated;
@@ -75,9 +86,8 @@ export async function fetchVoucher(id) {
 }
 
 export async function createVoucher(data) {
-  const res = await fetch(BASE, {
+  const res = await mutateRequest(BASE, {
     method: 'POST',
-    headers: authHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error('Failed to create voucher');
@@ -85,9 +95,8 @@ export async function createVoucher(data) {
 }
 
 export async function updateVoucher(id, data) {
-  const res = await fetch(`${BASE}/${id}`, {
+  const res = await mutateRequest(`${BASE}/${id}`, {
     method: 'PUT',
-    headers: authHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error('Failed to update voucher');
@@ -95,18 +104,16 @@ export async function updateVoucher(id, data) {
 }
 
 export async function toggleArchive(id) {
-  const res = await fetch(`${BASE}/${id}/archive`, {
+  const res = await mutateRequest(`${BASE}/${id}/archive`, {
     method: 'PATCH',
-    headers: authHeaders(),
   });
   if (!res.ok) throw new Error('Failed to toggle archive');
   return res.json();
 }
 
 export async function deleteVoucherApi(id) {
-  const res = await fetch(`${BASE}/${id}`, {
+  const res = await mutateRequest(`${BASE}/${id}`, {
     method: 'DELETE',
-    headers: authHeaders(),
   });
   if (!res.ok) throw new Error('Failed to delete voucher');
 }

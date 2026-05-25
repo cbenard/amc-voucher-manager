@@ -36,7 +36,7 @@ export async function renderDetail(params) {
     </div>
 
     <div class="barcode-section">
-      <div id="qr-card" class="barcode-card">
+      <div id="qr-card" class="barcode-card unblurred">
         <div class="label">QR Code (16-digit)</div>
         <div id="qr-render"></div>
         <div class="blur-overlay"><span class="tap-hint">Tap to reveal</span></div>
