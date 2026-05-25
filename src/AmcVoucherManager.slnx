@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="AmcVoucherManager.Tests/AmcVoucherManager.Tests.csproj" />
   <Project Path="AmcVoucherManager/AmcVoucherManager.csproj" />
 </Solution>
