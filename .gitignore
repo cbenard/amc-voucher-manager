@@ -497,4 +497,7 @@ FodyWeavers.xsd
 # Local SQLite data directory (development only — Docker uses /data via volume)
 data/
 
+# macOS
+.DS_Store
+
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,visualstudiocode,rider
