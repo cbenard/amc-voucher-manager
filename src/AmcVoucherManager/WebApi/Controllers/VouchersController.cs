@@ -1,0 +1,70 @@
+using AmcVoucherManager.Application.DTOs;
+using AmcVoucherManager.Domain.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+
+namespace AmcVoucherManager.WebApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class VouchersController : ControllerBase
+{
+    private readonly IVoucherService _voucherService;
+
+    public VouchersController(IVoucherService voucherService)
+    {
+        _voucherService = voucherService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<VoucherDto>>> GetAll(
+        [FromQuery] string? type,
+        [FromQuery] bool includeArchived = false)
+    {
+        var vouchers = await _voucherService.GetAllAsync(type, includeArchived);
+        return Ok(vouchers);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<VoucherDto>> GetById(Guid id)
+    {
+        var voucher = await _voucherService.GetByIdAsync(id);
+        if (voucher is null) return NotFound();
+        return Ok(voucher);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<VoucherDto>> Create([FromBody] CreateVoucherRequest request)
+    {
+        var voucher = await _voucherService.CreateAsync(request);
+        return CreatedAtAction(nameof(GetById), new { id = voucher.Id }, voucher);
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<VoucherDto>> Update(Guid id, [FromBody] UpdateVoucherRequest request)
+    {
+        try
+        {
+            var voucher = await _voucherService.UpdateAsync(id, request);
+            return Ok(voucher);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [HttpPatch("{id:guid}/archive")]
+    public async Task<ActionResult<VoucherDto>> ToggleArchive(Guid id)
+    {
+        var voucher = await _voucherService.ToggleArchiveAsync(id);
+        if (voucher is null) return NotFound();
+        return Ok(voucher);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        await _voucherService.DeleteAsync(id);
+        return NoContent();
+    }
+}

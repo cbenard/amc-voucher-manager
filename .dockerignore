@@ -1,0 +1,9 @@
+**/bin
+**/obj
+**/node_modules
+**/wwwroot
+/data
+.git
+.gitignore
+*.md
+.DS_Store
