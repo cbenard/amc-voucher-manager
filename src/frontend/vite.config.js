@@ -6,12 +6,11 @@ export default defineConfig({
   build: {
     outDir: '../AmcVoucherManager/wwwroot',
     emptyOutDir: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
     rollupOptions: {
       output: {
-        inlineDynamicImports: true,
+        manualChunks: {
+          scanner: ['html5-qrcode'],
+        },
       },
     },
   },

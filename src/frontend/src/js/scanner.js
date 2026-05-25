@@ -5,15 +5,13 @@ export function openScanner(onResult) {
   const overlay = document.createElement('div');
   overlay.id = 'scanner-overlay';
 
-  const video = document.createElement('video');
-  video.setAttribute('autoplay', '');
-  video.setAttribute('playsinline', '');
-  overlay.appendChild(video);
+  const readerContainer = document.createElement('div');
+  readerContainer.id = 'scanner-reader';
+  overlay.appendChild(readerContainer);
 
   const closeBtn = document.createElement('button');
   closeBtn.className = 'close-scanner';
   closeBtn.innerHTML = '&times;';
-  closeBtn.onclick = () => teardown();
   overlay.appendChild(closeBtn);
 
   const statusEl = document.createElement('p');
@@ -23,64 +21,59 @@ export function openScanner(onResult) {
 
   document.body.appendChild(overlay);
 
+  let detector = null;
   let stream = null;
   let animationId = null;
-  let detector = null;
+  let htmlScanner = null;
+  let aborted = false;
 
-  const useNativeDetector = 'BarcodeDetector' in window;
+  const useNative = 'BarcodeDetector' in window;
+
+  closeBtn.onclick = () => {
+    aborted = true;
+    teardown();
+  };
 
   async function setup() {
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
-      });
-      video.srcObject = stream;
-      await video.play();
-
-      if (useNativeDetector) {
+      if (aborted) return;
+      if (useNative) {
+        const video = document.createElement('video');
+        video.setAttribute('autoplay', '');
+        video.setAttribute('playsinline', '');
+        readerContainer.appendChild(video);
+        if (aborted) return;
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
+        });
+        if (aborted) { releaseStream(); return; }
+        video.srcObject = stream;
+        await video.play();
         detector = new BarcodeDetector({ formats: ['code_128', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code'] });
-        scanLoop();
+        nativeLoop(video);
       } else {
-        try {
-          const { default: Quagga } = await import('@ericblade/quagga2');
-          Quagga.init(
-            {
-              inputStream: {
-                type: 'LiveStream',
-                target: overlay,
-                constraints: { facingMode: 'environment' },
-              },
-              decoder: { readers: ['code_128_reader', 'ean_reader', 'upc_reader', 'qr_reader'] },
-              locate: true,
-            },
-            (err) => {
-              if (err) {
-                statusEl.textContent = 'Scanner init failed: ' + err;
-                return;
-              }
-              Quagga.start();
-              Quagga.onDetected((data) => {
-                const code = data.codeResult.code;
-                if (code) {
-                  Quagga.stop();
-                  teardown();
-                  onResult(code);
-                }
-              });
-            }
-          );
-        } catch {
-          statusEl.textContent = 'No barcode scanner available on this device';
-        }
+        const { Html5Qrcode } = await import('html5-qrcode');
+        if (aborted) return;
+        htmlScanner = new Html5Qrcode('scanner-reader');
+        await htmlScanner.start(
+          { facingMode: 'environment' },
+          { fps: 10 },
+          (decodedText) => {
+            teardown();
+            onResult(decodedText);
+          },
+          () => {}
+        );
       }
     } catch (err) {
-      statusEl.textContent = 'Camera access denied: ' + err.message;
+      statusEl.textContent = 'Camera error: ' + (err.message || err);
+      releaseAll();
     }
   }
 
-  async function scanLoop() {
-    if (!detector || !video.videoWidth) {
-      animationId = requestAnimationFrame(scanLoop);
+  async function nativeLoop(video) {
+    if (aborted || !detector || !video.videoWidth) {
+      animationId = requestAnimationFrame(() => nativeLoop(video));
       return;
     }
     try {
@@ -93,16 +86,40 @@ export function openScanner(onResult) {
         }
       }
     } catch {}
-    animationId = requestAnimationFrame(scanLoop);
+    if (!aborted) {
+      animationId = requestAnimationFrame(() => nativeLoop(video));
+    }
+  }
+
+  function releaseStream() {
+    if (stream) {
+      stream.getTracks().forEach((t) => t.stop());
+      stream = null;
+    }
+  }
+
+  function releaseScanner() {
+    if (htmlScanner) {
+      try {
+        htmlScanner.stop().catch(() => {});
+      } catch {}
+      htmlScanner = null;
+    }
+  }
+
+  function releaseAll() {
+    releaseStream();
+    releaseScanner();
   }
 
   function teardown() {
-    if (animationId) cancelAnimationFrame(animationId);
-    if (stream) stream.getTracks().forEach((t) => t.stop());
-    try {
-      const Quagga = window.Quagga;
-      if (Quagga) Quagga.stop();
-    } catch {}
+    aborted = true;
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+    releaseAll();
+    detector = null;
     overlay.remove();
   }
 

@@ -464,6 +464,18 @@ header {
   justify-content: center;
 }
 
+#scanner-reader {
+  width: 100%;
+  max-width: 500px;
+  min-height: 240px;
+}
+
+#scanner-reader video {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
 #scanner-overlay video {
   width: 100%;
   max-width: 500px;
