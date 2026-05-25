@@ -48,14 +48,20 @@ export async function getVoucher(id) {
   return db.get('vouchers', id);
 }
 
+function notify() {
+  window.dispatchEvent(new CustomEvent('voucher-data-changed'));
+}
+
 export async function putVoucher(voucher) {
   const db = await getDB();
   await db.put('vouchers', voucher);
+  notify();
 }
 
 export async function deleteVoucher(id) {
   const db = await getDB();
   await db.delete('vouchers', id);
+  notify();
 }
 
 export async function getAllVouchersRaw() {

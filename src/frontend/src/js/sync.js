@@ -3,6 +3,15 @@ import * as db from './db.js';
 
 let syncing = false;
 
+function showToast(msg) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
 export async function syncFromServer() {
   if (syncing) return;
   syncing = true;
@@ -12,7 +21,6 @@ export async function syncFromServer() {
     for (const v of vouchers) {
       await db.putVoucher(v);
     }
-    console.log(`Synced ${vouchers.length} vouchers from server`);
   } catch (err) {
     console.warn('Sync from server failed (offline?)', err);
   } finally {
@@ -24,7 +32,7 @@ export async function flushPendingChanges() {
   const changes = await db.getPendingChanges();
   if (changes.length === 0) return;
 
-  console.log(`Flushing ${changes.length} pending changes`);
+  let failed = false;
 
   for (const change of changes) {
     try {
@@ -44,8 +52,17 @@ export async function flushPendingChanges() {
       }
       await db.removePendingChange(change.id);
     } catch (err) {
-      console.warn(`Failed to flush change ${change.id}`, err);
+      if (err.message && (err.message.includes('already exists') || err.message.includes('Duplicate'))) {
+        await db.removePendingChange(change.id);
+      } else {
+        console.warn(`Failed to flush change ${change.id}`, err);
+        failed = true;
+      }
     }
+  }
+
+  if (failed) {
+    showToast('Background sync failed — pull down to retry');
   }
 }
 
@@ -64,7 +81,6 @@ export function registerBackgroundSync() {
   }
 
   window.addEventListener('online', () => {
-    console.log('Back online, syncing...');
     fullSync();
   });
 

@@ -1,4 +1,4 @@
-import { initRouter, route, navigate } from './router.js';
+import { initRouter, route, navigate, getCurrentRoute } from './router.js';
 import * as api from './api.js';
 import * as db from './db.js';
 import { fullSync, flushPendingChanges, registerBackgroundSync } from './sync.js';
@@ -57,6 +57,12 @@ function init() {
   if (api.isOnline()) {
     fullSync().then(() => console.log('Initial sync complete'));
   }
+
+  window.addEventListener('voucher-data-changed', () => {
+    if (getCurrentRoute() === '/') {
+      renderHome();
+    }
+  });
 
   document.getElementById('sync-btn')?.addEventListener('click', (e) => {
     e.preventDefault();

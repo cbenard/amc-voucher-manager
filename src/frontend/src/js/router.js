@@ -2,6 +2,8 @@ const routes = {};
 let currentRoute = null;
 let currentParams = {};
 
+export function getCurrentRoute() { return currentRoute; }
+
 export function route(pattern, handler) {
   routes[pattern] = handler;
 }
