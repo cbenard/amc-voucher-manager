@@ -1,5 +1,6 @@
 import * as db from '../db.js';
 import * as api from '../api.js';
+import { flushPendingChanges } from '../sync.js';
 import { openScanner } from '../scanner.js';
 import { TYPE_CONFIG } from './home.js';
 
@@ -134,6 +135,7 @@ function setupForm(editId) {
             dateAdded: formData.dateAdded,
           });
           await db.putVoucher(updated);
+          await flushPendingChanges();
         } else {
           await db.putVoucher({ ...formData, id: editId, updatedAt: new Date().toISOString() });
           await db.addPendingChange({ action: 'update', id: editId, data: formData });
@@ -144,6 +146,7 @@ function setupForm(editId) {
         if (api.isOnline()) {
           const created = await api.createVoucher(formData);
           await db.putVoucher(created);
+          await flushPendingChanges();
           showToast('Voucher added');
           window.location.hash = `#/voucher/${created.id}`;
         } else {

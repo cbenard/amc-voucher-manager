@@ -96,6 +96,12 @@ header {
   border-left-color: var(--primary);
 }
 
+.menu-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 8px 12px;
+}
+
 #main-content {
   flex: 1;
   padding: 16px;

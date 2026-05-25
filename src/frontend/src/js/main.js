@@ -1,7 +1,7 @@
 import { initRouter, route, navigate } from './router.js';
 import * as api from './api.js';
 import * as db from './db.js';
-import { fullSync, registerBackgroundSync } from './sync.js';
+import { fullSync, flushPendingChanges, registerBackgroundSync } from './sync.js';
 import { renderHome } from './views/home.js';
 import { renderList } from './views/list.js';
 import { renderDetail } from './views/detail.js';
@@ -58,7 +58,21 @@ function init() {
     fullSync().then(() => console.log('Initial sync complete'));
   }
 
+  document.getElementById('sync-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    fullSync().then(() => showToast('Sync complete')).catch(() => showToast('Sync failed'));
+  });
+
   registerBackgroundSync();
+}
+
+function showToast(msg) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
 }
 
 document.addEventListener('DOMContentLoaded', init);

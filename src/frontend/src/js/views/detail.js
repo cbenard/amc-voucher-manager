@@ -1,5 +1,6 @@
 import * as db from '../db.js';
 import * as api from '../api.js';
+import { flushPendingChanges } from '../sync.js';
 import { renderQR } from '../qrcode.js';
 import { renderBarcode } from '../barcode.js';
 import { TYPE_CONFIG } from './home.js';
@@ -87,14 +88,23 @@ function setupBlurToggles() {
 function setupActions(id, isArchived) {
   const archiveBtn = document.getElementById('archive-btn');
   archiveBtn?.addEventListener('click', async () => {
-    try {
-      await api.toggleArchive(id);
-      await db.putVoucher(await api.fetchVoucher(id));
-      showToast(isArchived ? 'Voucher unarchived' : 'Voucher archived');
-      renderDetail({ id });
-    } catch {
-      showToast('Failed to toggle archive (offline?)');
+    if (api.isOnline()) {
+      try {
+        const updated = await api.toggleArchive(id);
+        await db.putVoucher(updated);
+        showToast(isArchived ? 'Voucher unarchived' : 'Voucher archived');
+        await flushPendingChanges();
+        renderDetail({ id });
+        return;
+      } catch {
+        showToast('Failed to toggle archive');
+        return;
+      }
     }
+    await db.putVoucher({ ...(await db.getVoucher(id)), isArchived: !isArchived, archivedDate: isArchived ? null : new Date().toISOString().split('T')[0] });
+    await db.addPendingChange({ action: 'archive', id });
+    showToast(isArchived ? 'Voucher unarchived (offline)' : 'Voucher archived (offline)');
+    renderDetail({ id });
   });
 
   const deleteBtn = document.getElementById('delete-btn');
@@ -107,14 +117,23 @@ function setupActions(id, isArchived) {
           'Confirm Delete',
           'Really delete? This is permanent.',
           async () => {
-            try {
-              await api.deleteVoucherApi(id);
-              await db.deleteVoucher(id);
-              showToast('Voucher deleted');
-              window.location.hash = '#/';
-            } catch {
-              showToast('Failed to delete (offline?)');
+            if (api.isOnline()) {
+              try {
+                await api.deleteVoucherApi(id);
+                await db.deleteVoucher(id);
+                showToast('Voucher deleted');
+                await flushPendingChanges();
+                window.location.hash = '#/';
+                return;
+              } catch {
+                showToast('Failed to delete');
+                return;
+              }
             }
+            await db.deleteVoucher(id);
+            await db.addPendingChange({ action: 'delete', id });
+            showToast('Voucher deleted (offline, will sync)');
+            window.location.hash = '#/';
           }
         );
       }

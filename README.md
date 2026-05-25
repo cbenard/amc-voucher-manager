@@ -10,7 +10,7 @@ A Progressive Web App for managing AMC Theater vouchers. Import vouchers by scan
 - **📷 Barcode scanning** — Point camera at any Code128/EAN/UPC barcode to auto-import
 - **🔐 Privacy blur** — QR codes and barcodes blurred by default; tap to reveal one at a time
 - **📂 Organize by type** — Tickets, drinks, popcorn with type-specific icons
-- **📦 Offline-first** — All data stored locally in IndexedDB, syncs in background
+- **📦 Offline-first** — All data stored locally in IndexedDB, syncs in background (manual sync button in menu)
 - **🔄 Real-time sync** — SignalR keeps all devices updated simultaneously
 - **🏷️ Archive / Delete** — Archive used vouchers, delete with double-confirmation
 - **📝 Notes** — Optional notes on each voucher, truncated in list view
