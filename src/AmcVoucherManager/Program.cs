@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using AmcVoucherManager.Domain.Interfaces;
 using AmcVoucherManager.Infrastructure.Data;
 using AmcVoucherManager.Infrastructure.Repositories;
@@ -19,7 +20,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
 builder.Services.AddScoped<IVoucherService, VoucherService>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddSignalR();
 
 var app = builder.Build();

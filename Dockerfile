@@ -21,7 +21,7 @@ WORKDIR /app
 RUN mkdir -p /data
 
 COPY --from=backend-build /publish .
-COPY --from=frontend-build /frontend/dist ./wwwroot
+    COPY --from=frontend-build /AmcVoucherManager/wwwroot ./wwwroot
 
 ENV ASPNETCORE_URLS=http://+:5000
 ENV DataDirectory=/data
