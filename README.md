@@ -49,15 +49,23 @@ The SQLite database file is stored at `/data/vouchers.db` inside the container. 
 
 ### Docker Compose
 
-```bash
-# Start the service
-docker compose up -d
+```yaml
+services:
+  app:
+    build: .
+    container_name: amc-vouchers
+    ports:
+      - "5000:5000"
+    volumes:
+      - vouchers-data:/data
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+      - DataDirectory=/data
+    restart: unless-stopped
 
-# View logs
-docker compose logs -f
-
-# Stop and remove
-docker compose down
+volumes:
+  vouchers-data:
 ```
 
 ### Security
